@@ -1,0 +1,225 @@
+
+services:
+  k6_test_no_aot:
+    image: grafana/k6
+    volumes:
+      - ./k6-scripts/:/src
+    command:
+      run -o experimental-prometheus-rw --tag testid=webapp_no_aot /src/k6.js 
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
+      BASE_URL: "http://webapp_no_aot:8080"
+    
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      webapp_aot:
+        condition: service_healthy
+      webapp_no_aot:
+        condition: service_healthy
+      
+    networks:
+      - custom-network
+    ports:
+      - "6565:6565"
+  
+  k6_test_aot:
+    image: grafana/k6
+    volumes:
+      - ./k6-scripts/:/src
+    command:
+      run -o experimental-prometheus-rw --tag testid=webapp_aot /src/k6.js
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: "http://prometheus:9090/api/v1/write"
+      BASE_URL: "http://webapp_aot:8080"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      webapp_aot:
+        condition: service_healthy
+      webapp_no_aot:
+        condition: service_healthy
+    networks:
+      - custom-network
+    ports:
+      - "6566:6566"
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - custom-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+  
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    networks:
+      - custom-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+      start_period: 40s
+    depends_on:
+      cadvisor: 
+        condition: service_healthy
+  
+  dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:9.0.0-preview.5
+    container_name: aspire-dashboard-for-benchmarks
+    ports:
+      - "5468:18888"
+      - "5469:18889"
+    environment:
+      DASHBOARD__OTLP__AUTHMODE: "ApiKey"
+      DASHBOARD__OTLP__PRIMARYAPIKEY: "dev"
+      DASHBOARD__Frontend__BrowserToken: "admin"
+    networks:
+      - custom-network
+    restart: unless-stopped
+    tty: true
+  
+  webapp_no_aot:
+    container_name: benchmark_webapp_no_aot
+    build:
+      context: ./EfVersusDapper  # Path to your Dockerfile
+      dockerfile: Dockerfile
+    environment:
+      OTEL_SERVICE_NAME: "NoAotApp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
+      OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
+      UseEf: false
+    image: noaotapp
+    ports:
+      - "634:8080"
+    depends_on:
+      benchmarkNoAotPostgres:
+        condition: service_healthy
+    networks:
+      - custom-network  
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "512m"
+
+  webapp_aot:
+    container_name: benchmark_webapp_aot
+    environment:
+      OTEL_SERVICE_NAME: "AotApp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
+      OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
+      UseEf: true
+    build:
+      context: ./EfVersusDapper  # Path to your Dockerfile
+      dockerfile: Dockerfile
+    image: aotapp
+    depends_on:
+      benchmarkAotPostgres:
+        condition: service_started
+    ports:
+      - "635:8080"
+    networks:
+      - custom-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "512m"
+  
+  benchmarkAotPostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: benchmarkDb
+    ports:
+      - "5457:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - custom-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+      
+  benchmarkNoAotPostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: benchmarkDb
+    ports:
+      - "5458:5432"
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+    networks:
+      - custom-network 
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+      
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor
+    ports:
+      - 8085:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+    networks:
+      - custom-network
+
+networks:
+  custom-network:
+    driver: bridge
+
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  postgres_data:
+  postgres_data2:
+  

@@ -1,0 +1,31 @@
+# Global configuration for Prometheus
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. Default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Scrape configuration for Prometheus and additional endpoints
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: "prometheus"
+    scrape_interval: 2s # Poll quickly for a more responsive demo
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Scrape your .NET API (webapp_local service)
+  - job_name: "webapp_no_aot"
+    scrape_interval: 3s # Poll quickly for a more responsive demo
+    static_configs:
+      - targets: ["webapp_no_aot:8080"]
+  
+  # Scrape your .NET API (webapp_local service)
+  - job_name: "webapp_aot"
+    scrape_interval: 3s # Poll quickly for a more responsive demo
+    static_configs:
+      - targets: [ "webapp_aot:8080" ]
+  - job_name: "cadvisor_metrics"
+    scrape_interval: 3s
+    static_configs:
+      - targets:
+          - cadvisor:8080
+
