@@ -119,7 +119,8 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
       OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
       ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
-      UseEf: false
+      UseEf: true
+      UseSplitQuery: false
     image: noaotapp
     ports:
       - "634:8080"
@@ -142,6 +143,7 @@ services:
       OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
       ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
       UseEf: true
+      UseSplitQuery: true
     build:
       context: ./EfVersusDapper  # Path to your Dockerfile
       dockerfile: Dockerfile
