@@ -7,7 +7,16 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
 {
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
-    public async Task<CustomerDto?> GetCustomerWithOrdersAsync(Guid customerId)
+    public Task<CustomerDto?> GetCustomerWithOrdersAsync(Guid customerId)
+    {
+        var isSplitQuery = configuration.GetValue<bool>("UseSplitQuery");
+
+        return isSplitQuery
+            ? GetCustomerWithOrdersSplitQueryAsync(customerId)
+            : GetCustomerWithOrdersJoinsAsync(customerId);
+
+    }
+    private async Task<CustomerDto?> GetCustomerWithOrdersSplitQueryAsync(Guid customerId)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -39,11 +48,11 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
             Name = customer.Name,
             Orders = orders.Select(order => new OrderDto
             {
-                Id = order.Id,
+                OrderId = order.Id,
                 OrderDate = order.OrderDate,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
                 {
-                    Id = oi.Id,
+                    OrderItemId = oi.Id,
                     ProductName = oi.ProductName,
                     Quantity = oi.Quantity,
                     Price = oi.Price
@@ -52,6 +61,57 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
         };
 
         return customerDto;
+    }
+    
+    private async Task<CustomerDto?> GetCustomerWithOrdersJoinsAsync(Guid customerId)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        const string sql = """
+                           SELECT c."Id", c."Name", o."Id" OrderId, o."OrderDate", oi."Id" AS OrderItemId, oi."OrderId", oi."ProductName", oi."Quantity", oi."Price"
+                           FROM "Customers" c
+                           LEFT JOIN "Orders" o ON c."Id" = o."CustomerId"
+                           LEFT JOIN "OrderItems" oi ON o."Id" = oi."OrderId"
+                           WHERE c."Id" = @Id
+                           """;
+
+        var customerDict = new Dictionary<Guid, CustomerDto>();
+        var orderDict = new Dictionary<Guid, OrderDto>();
+
+        var result = await connection.QueryAsync<CustomerDto, OrderDto, OrderItemDto, CustomerDto>(
+            sql,
+            (customerDto, orderDto, orderItemDto) =>
+            {
+                if (!customerDict.TryGetValue(customerDto.Id, out var currentCustomer))
+                {
+                    currentCustomer = customerDto;
+                    currentCustomer.Orders = [];
+                    customerDict[currentCustomer.Id] = currentCustomer;
+                }
+
+                if (orderDto != null)
+                {
+                    if (!orderDict.TryGetValue(orderDto.OrderId, out var currentOrder))
+                    {
+                        currentOrder = orderDto;
+                        currentCustomer.Orders.Add(currentOrder);
+                        orderDict[currentOrder.OrderId] = currentOrder;
+                        currentOrder.OrderItems = [];
+                    }
+
+                    if (orderItemDto != null)
+                    {
+                        currentOrder.OrderItems.Add(orderItemDto);
+                    }
+                }
+
+                return currentCustomer;
+            },
+            new { Id = customerId },
+            splitOn: "OrderId,OrderItemId"
+        );
+
+        return result.FirstOrDefault();
     }
 
     public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
@@ -119,11 +179,11 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
             Name = customerDto.Name,
             Orders = customerDto.Orders.Select(orderDto => new Order
             {
-                Id = orderDto.Id,
+                Id = orderDto.OrderId,
                 OrderDate = orderDto.OrderDate,
                 OrderItems = orderDto.OrderItems.Select(oiDto => new OrderItem
                 {
-                    Id = oiDto.Id,
+                    Id = oiDto.OrderItemId,
                     ProductName = oiDto.ProductName,
                     Quantity = oiDto.Quantity,
                     Price = oiDto.Price
@@ -134,20 +194,19 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
         await connection.ExecuteAsync(sql, customer, transaction);
         await transaction.CommitAsync();
     }
-    
-    
+
 // Add this method below the existing methods in the DapperCustomerRepository class
 
-public async Task<IReadOnlyList<Guid>> GetAllCustomerIdsAsync()
-{
-    await using var connection = new NpgsqlConnection(_connectionString);
+    public async Task<IReadOnlyList<Guid>> GetAllCustomerIdsAsync()
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
 
-    const string sql = """
-                       SELECT "Id" FROM "Customers"
-                       """;
+        const string sql = """
+                           SELECT "Id" FROM "Customers"
+                           """;
 
-    var customerIds = await connection.QueryAsync<Guid>(sql);
+        var customerIds = await connection.QueryAsync<Guid>(sql);
 
-    return customerIds.ToList();
-}
+        return customerIds.ToList();
+    }
 }

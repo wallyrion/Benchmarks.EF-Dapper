@@ -120,7 +120,7 @@ services:
       OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
       ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
       UseEf: true
-      UseSplitQuery: false
+      UseSplitQuery: true
     image: noaotapp
     ports:
       - "634:8080"
@@ -145,12 +145,12 @@ services:
       UseEf: true
       UseSplitQuery: true
     build:
-      context: ./EfVersusDapper  # Path to your Dockerfile
+      context: ./EfVersusDapperDotnet9  # Path to your Dockerfile
       dockerfile: Dockerfile
     image: aotapp
     depends_on:
       benchmarkAotPostgres:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "635:8080"
     networks:

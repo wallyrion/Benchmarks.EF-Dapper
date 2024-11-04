@@ -1,10 +1,24 @@
 using EfVersusDapper;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation();
+
+        metrics.AddMeter("System.Runtime");
+        // Metrics provides by ASP.NET Core in .NET 8
+        metrics.AddMeter("Microsoft.AspNetCore.Hosting");
+        metrics.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+
+        metrics.AddPrometheusExporter();
+        metrics.AddOtlpExporter();
+    });
 
 // Add to Program.cs
 builder.Services.AddHealthChecks();
@@ -43,7 +57,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
+app.MapPrometheusScrapingEndpoint();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/healthz");

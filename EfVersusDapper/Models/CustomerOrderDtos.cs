@@ -12,7 +12,7 @@ public class CustomerDto
 
 public class OrderDto
 {
-    public Guid Id { get; set; }
+    public Guid OrderId { get; set; }
     public DateTime OrderDate { get; set; }
     public List<OrderItemDto> OrderItems { get; set; }
 }
@@ -21,7 +21,7 @@ public class OrderDto
 
 public class OrderItemDto
 {
-    public Guid Id { get; set; }
+    public Guid OrderItemId { get; set; }
     public string ProductName { get; set; }
     public int Quantity { get; set; }
     public decimal Price { get; set; }
