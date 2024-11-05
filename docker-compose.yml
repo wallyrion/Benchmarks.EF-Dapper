@@ -145,8 +145,8 @@ services:
       UseEf: true
       UseSplitQuery: true
     build:
-      context: ./EfVersusDapperDotnet9  # Path to your Dockerfile
-      dockerfile: Dockerfile
+      context: ./EfVersusDapper  # Path to your Dockerfile
+      dockerfile: Dotnet9.Dockerfile
     image: aotapp
     depends_on:
       benchmarkAotPostgres:

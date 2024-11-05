@@ -18,8 +18,6 @@ public class Order
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; }
     public List<OrderItem> OrderItems { get; set; }
-    
-    public string? Notes { get; set; }
 }
 
 // Models/OrderItem.cs

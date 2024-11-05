@@ -34,10 +34,7 @@ namespace EfVersusDapper.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("EfVersusDapper.Order", b =>
@@ -49,9 +46,6 @@ namespace EfVersusDapper.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -59,7 +53,7 @@ namespace EfVersusDapper.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("EfVersusDapper.OrderItem", b =>
@@ -85,7 +79,7 @@ namespace EfVersusDapper.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("EfVersusDapper.Order", b =>

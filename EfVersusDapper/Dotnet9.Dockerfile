@@ -1,21 +1,21 @@
 ﻿# Learn about building .NET container images:
 # https://github.com/dotnet/dotnet-docker/blob/main/samples/README.md
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0.100-rc.2 AS build
 WORKDIR /source
 ARG TARGETARCH
 
 # Copy project file and restore as distinct layers
 # Copy source code and publish app
 COPY --link EfVersusDapper.csproj .
-RUN dotnet restore -p:TargetFramework=net8.0 -r linux-amd64
+RUN dotnet restore -p:TargetFramework=net9.0 -r linux-amd64
 
 COPY --link . .
 
-RUN dotnet publish -p:TargetFramework=net8.0 --no-restore -r linux-amd64 -o /app EfVersusDapper.csproj
+RUN dotnet publish -p:TargetFramework=net9.0 --no-restore -r linux-amd64 -o /app EfVersusDapper.csproj
 
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0.0-rc.2
 RUN apt-get -y update; apt-get -y install curl
 
 

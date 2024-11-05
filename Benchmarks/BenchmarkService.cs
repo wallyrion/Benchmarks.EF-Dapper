@@ -7,12 +7,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Benchmarks;
 
-[SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net90)]
 [SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net80, baseline: true)]
+[SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net90)]
 [MemoryDiagnoser(false)]
-public class BenchmarkService
+public class BenchmarkService : BaseBenchmark
 {
-    private IServiceProvider _serviceProvider = null!;
     private List<Guid> _customerIds = [];
     private Guid CurrentCustomerId { get; set; }
     
@@ -20,13 +19,9 @@ public class BenchmarkService
     public bool UseSplitQuery { get; set; } = false;  
     private static readonly Random Random = new(200);
 
-
-    [GlobalSetup]
-    public async Task Setup()
+    public override async Task Setup()
     {
-        var serviceCollection = new ServiceCollection();
-        ConfigureServices(serviceCollection);
-        _serviceProvider = serviceCollection.BuildServiceProvider();
+        await base.Setup();
 
         var customersRepository = _serviceProvider.GetRequiredKeyedService<ICustomerRepository>("EF");
         _customerIds = (await customersRepository.GetAllCustomerIdsAsync()).ToList();
@@ -63,25 +58,4 @@ public class BenchmarkService
 
         return await repository.GetCustomerWithOrdersAsync(_currentCustomerId);
     }*/
-
-    private void ConfigureServices(IServiceCollection services)
-    {
-        // Setup configuration
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .Build();
-
-        services.AddSingleton<IConfiguration>(configuration);
-
-        // Add other services to DI container
-
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(connectionString));
-
-        services.AddKeyedScoped<ICustomerRepository, EfCustomerRepository>("EF");
-        services.AddKeyedScoped<ICustomerRepository, DapperCustomerRepository>("Dapper");
-
-        // Add more services as needed
-    }
 }
