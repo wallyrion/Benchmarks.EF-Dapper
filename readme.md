@@ -61,7 +61,4 @@ Comparing the performance metrics for .NET 8 and .NET 9:
 
 To visualize these differences, here’s a comparative analysis:
 
-![dotnet8_loadtests_result.png](dotnet8_loadtests_result.png)
-![dotnet9_loadtests_result.png](dotnet9_loadtests_result.png)
-
 This summary highlights key performance metrics, demonstrating how both .NET versions handle load testing. From the given data, we can see that .NET 8 had a higher throughput (Requests per second) and better average request duration compared to .NET 9.
