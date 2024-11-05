@@ -1,0 +1,115 @@
+
+services:
+  webapp_no_aot:
+    container_name: benchmark_webapp_no_aot
+    build:
+      context: ./EfVersusDapper  # Path to your Dockerfile
+      dockerfile: Dockerfile
+    environment:
+      OTEL_SERVICE_NAME: "NoAotApp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
+      OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
+      UseEf: true
+      UseSplitQuery: true
+    image: noaotapp
+    ports:
+      - "634:8080"
+    depends_on:
+      benchmarkNoAotPostgres:
+        condition: service_healthy
+    networks:
+      - custom-network  
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256m"
+
+  webapp_aot:
+    container_name: benchmark_webapp_aot
+    environment:
+      OTEL_SERVICE_NAME: "AotApp"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
+      UseEf: true
+      UseSplitQuery: true
+    build:
+      context: ./EfVersusDapper  # Path to your Dockerfile
+      dockerfile: Dotnet9.Dockerfile
+    image: aotapp
+    depends_on:
+      benchmarkAotPostgres:
+        condition: service_healthy
+    ports:
+      - "635:8080"
+    networks:
+      - custom-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "256m"
+  
+  benchmarkAotPostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: benchmarkDb
+    ports:
+      - "5457:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - custom-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+      
+  benchmarkNoAotPostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: benchmarkDb
+    ports:
+      - "5458:5432"
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+    networks:
+      - custom-network 
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+      
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor
+    ports:
+      - 8085:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+    networks:
+      - custom-network
+
+networks:
+  custom-network:
+    driver: bridge
+
+
+volumes:
+  prometheus-data:
+  postgres_data:
+  postgres_data2:
+  
