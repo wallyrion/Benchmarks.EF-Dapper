@@ -17,6 +17,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithOne(o => o.Customer)
             .HasForeignKey(o => o.CustomerId);
 
+        modelBuilder.Entity<Customer>()
+            .HasIndex(x => x.Name).IsUnique();
+
         modelBuilder.Entity<Order>()
             .HasMany(o => o.OrderItems)
             .WithOne(oi => oi.Order)

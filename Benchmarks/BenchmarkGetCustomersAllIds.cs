@@ -8,18 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Benchmarks;
 
 [SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net90)]
-[SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net80, baseline: true)]
+[SimpleJob(BenchmarkDotNet.Jobs.RuntimeMoniker.Net80)]
 [MemoryDiagnoser(false)]
-public class BenchmarkService
+public class BenchmarkGetCustomersAllIds
 {
     private IServiceProvider _serviceProvider = null!;
-    private List<Guid> _customerIds = [];
-    private Guid CurrentCustomerId { get; set; }
-    
-    [Params(true, false)]
-    public bool UseSplitQuery { get; set; } = false;  
-    private static readonly Random Random = new(200);
-
 
     [GlobalSetup]
     public async Task Setup()
@@ -27,42 +20,23 @@ public class BenchmarkService
         var serviceCollection = new ServiceCollection();
         ConfigureServices(serviceCollection);
         _serviceProvider = serviceCollection.BuildServiceProvider();
-
-        var customersRepository = _serviceProvider.GetRequiredKeyedService<ICustomerRepository>("EF");
-        _customerIds = (await customersRepository.GetAllCustomerIdsAsync()).ToList();
     }
-
-    [IterationSetup]
-    public void IterationSetup()
-    {
-        if (_customerIds.Count <= 0)
-        {
-            return;
-        }
-        
-        var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
-        configuration["UseSplitQuery"] = UseSplitQuery.ToString();;
-        
-        var randomIndex = Random.Next(0, _customerIds.Count - 1);
-        CurrentCustomerId = _customerIds[randomIndex];
-    }
-
+    
     [Benchmark]
-    public async Task<CustomerDto?> GetCustomerById()
+    public async Task<IReadOnlyList<Guid>> GetCustomersIds()
     {
         var repository = _serviceProvider.GetRequiredKeyedService<ICustomerRepository>("EF");
 
-        return await repository.GetCustomerWithOrdersAsync(CurrentCustomerId);
+        return await repository.GetAllCustomerIdsAsync();
     }
-
-   
-    /*[Benchmark]
-    public async Task<CustomerDto?> GetCustomerByIdDapper()
+    
+    [Benchmark]
+    public async Task<IReadOnlyList<Guid>> GetCustomersIdsDapper()
     {
         var repository = _serviceProvider.GetRequiredKeyedService<ICustomerRepository>("Dapper");
 
-        return await repository.GetCustomerWithOrdersAsync(_currentCustomerId);
-    }*/
+        return await repository.GetAllCustomerIdsAsync();
+    }
 
     private void ConfigureServices(IServiceCollection services)
     {
@@ -81,7 +55,5 @@ public class BenchmarkService
 
         services.AddKeyedScoped<ICustomerRepository, EfCustomerRepository>("EF");
         services.AddKeyedScoped<ICustomerRepository, DapperCustomerRepository>("Dapper");
-
-        // Add more services as needed
     }
 }

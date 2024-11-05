@@ -7,4 +7,7 @@ public interface ICustomerRepository
     Task<IEnumerable<CustomerDto>> GetAllCustomersAsync();
     Task AddCustomerAsync(CustomerDto customerDto);
     Task<IReadOnlyList<Guid>> GetAllCustomerIdsAsync();
+    Task<int> GetCustomersCountAsync();
+
+    Task<CustomerDto?> GetCustomerByIdAsync(Guid customerId);
 }

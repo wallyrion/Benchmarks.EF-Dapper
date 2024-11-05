@@ -209,4 +209,29 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
 
         return customerIds.ToList();
     }
+
+    public async Task<int> GetCustomersCountAsync()
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        const string sql = """SELECT COUNT(*) FROM "Customers" """;
+
+        var count = await connection.ExecuteScalarAsync<int>(sql);
+        return count;
+    }
+
+    public async Task<CustomerDto?> GetCustomerByIdAsync(Guid customerId)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        const string sql = """
+                               SELECT "Id", "Name"
+                               FROM "Customers"
+                               WHERE "Id" = @Id
+                           """;
+
+        var customer = await connection.QueryFirstOrDefaultAsync<CustomerDto>(sql, new { Id = customerId });
+
+        return customer;
+    }
 }

@@ -4,25 +4,25 @@ namespace EfVersusDapper;
 
 public class EfCustomerRepository(ApplicationDbContext context, IConfiguration configuration) : ICustomerRepository
 {
-    private static readonly Func<ApplicationDbContext, Guid, Task<Customer?>> _getCustomerByIdCompiledQuery
+    /*private static readonly Func<ApplicationDbContext, Guid, Task<Customer?>> _getCustomerByIdCompiledQuery
         = EF.CompileAsyncQuery(
             (ApplicationDbContext context, Guid customerId) =>
                 context.Customers
                     .AsNoTracking()
                     .AsSplitQuery()
                     .Include(x => x.Orders).ThenInclude(o => o.OrderItems)
-                    .FirstOrDefault(x => x.Id == customerId));
-    
+                    .FirstOrDefault(x => x.Id == customerId));*/
+
     public async Task<CustomerDto?> GetCustomerWithOrdersAsync(Guid customerId)
     {
-        var useCompiledQuery = configuration.GetValue<bool>("UseCompiledQuery");
+        /*var useCompiledQuery = configuration.GetValue<bool>("UseCompiledQuery");
 
         if (useCompiledQuery)
         {
-            var res =  await _getCustomerByIdCompiledQuery.Invoke(context, customerId);
+            var res = await _getCustomerByIdCompiledQuery.Invoke(context, customerId);
 
             if (res == null) return null;
-            
+
             return new CustomerDto
             {
                 Id = res.Id,
@@ -40,50 +40,38 @@ public class EfCustomerRepository(ApplicationDbContext context, IConfiguration c
                     }).ToList()
                 }).ToList()
             };
-        }
-        
+        }*/
+
         var isSplitQuery = configuration.GetValue<bool>("UseSplitQuery");
-        var asNoTracking = configuration.GetValue<bool>("AsNoTracking");
 
         var customerQuery = context.Customers.AsQueryable();
 
-        if (asNoTracking)
-        {
-            customerQuery = customerQuery.AsNoTracking();
-        }
-        
         if (isSplitQuery)
         {
             customerQuery = customerQuery.AsSplitQuery();
         }
 
-        var customer =
-            await customerQuery.Include(c => c.Orders)
-                .ThenInclude(o => o.OrderItems)
+        var result =
+            await customerQuery.Select(customer => new CustomerDto
+                {
+                    Id = customer.Id,
+                    Name = customer.Name,
+                    Orders = customer.Orders.Select(order => new OrderDto
+                    {
+                        OrderId = order.Id,
+                        OrderDate = order.OrderDate,
+                        OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                        {
+                            OrderItemId = oi.Id,
+                            ProductName = oi.ProductName,
+                            Quantity = oi.Quantity,
+                            Price = oi.Price
+                        }).ToList()
+                    }).ToList()
+                })
                 .FirstOrDefaultAsync(c => c.Id == customerId);
 
-        // Transform model to DTO
-        if (customer == null) return null;
-
-        var customerDto = new CustomerDto
-        {
-            Id = customer.Id,
-            Name = customer.Name,
-            Orders = customer.Orders.Select(order => new OrderDto
-            {
-                OrderId = order.Id,
-                OrderDate = order.OrderDate,
-                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
-                {
-                    OrderItemId = oi.Id,
-                    ProductName = oi.ProductName,
-                    Quantity = oi.Quantity,
-                    Price = oi.Price
-                }).ToList()
-            }).ToList()
-        };
-
-        return customerDto;
+        return result;
     }
 
     public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
@@ -144,5 +132,21 @@ public class EfCustomerRepository(ApplicationDbContext context, IConfiguration c
     public async Task<IReadOnlyList<Guid>> GetAllCustomerIdsAsync()
     {
         return await context.Customers.Select(c => c.Id).ToListAsync();
+    }
+
+    public async Task<int> GetCustomersCountAsync()
+    {
+        return await context.Customers.CountAsync();
+    }
+
+    public async Task<CustomerDto?> GetCustomerByIdAsync(Guid customerId)
+    {
+        var customer = await context.Customers.Select(x => new CustomerDto
+        {
+            Id = x.Id,
+            Name = x.Name
+        }).FirstOrDefaultAsync(c => c.Id == customerId);
+
+        return customer;
     }
 }
