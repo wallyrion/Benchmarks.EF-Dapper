@@ -118,7 +118,7 @@ services:
       OTEL_SERVICE_NAME: "NoAotApp"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
       OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
-      ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
       UseEf: true
       UseSplitQuery: true
     image: noaotapp
@@ -132,8 +132,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: "512m"
+          cpus: "0.5"
+          memory: "256m"
 
   webapp_aot:
     container_name: benchmark_webapp_aot
@@ -141,7 +141,7 @@ services:
       OTEL_SERVICE_NAME: "AotApp"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
       OTEL_EXPORTER_OTLP_Headers: "x-otlp-api-key=dev"
-      ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb;Username=postgres;Password=postgres"
+      ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
       UseEf: true
       UseSplitQuery: true
     build:
@@ -158,8 +158,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: "512m"
+          cpus: "1"
+          memory: "256m"
   
   benchmarkAotPostgres:
     image: postgres

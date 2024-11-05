@@ -38,3 +38,30 @@
 | GetCustomersCountDapper | .NET 8.0 | .NET 8.0 | 924.6 us | 10.75 us | 10.06 us |   2.13 KB |
 | GetCustomersCount       | .NET 9.0 | .NET 9.0 | 939.0 us |  6.70 us |  5.94 us |   5.56 KB |
 | GetCustomersCountDapper | .NET 9.0 | .NET 9.0 | 919.2 us | 12.36 us | 11.56 us |   2.17 KB |
+
+
+
+
+# Load Test Results Summary
+
+Comparing the performance metrics for .NET 8 and .NET 9:
+
+| Metric                      | .NET 8                                | .NET 9                                |
+|----------------------------:|:-------------------------------------:|:-------------------------------------:|
+| **Total Requests**          | 1,690,574                             | 1,287,101                             |
+| **Requests per second**     | 1,741.02                              | 1,325.61                              |
+| **Data Received**           | 13 GB                                 | 9.5 GB                                |
+| **Data Sent**               | 220 MB                                | 164 MB                                |
+| **HTTP Request Duration**   | avg=2.29s, p(90)=4.79s, p(95)=5.51s   | avg=3.32s, p(90)=6.73s, p(95)=8.06s   |
+| **Request Blocking**        | avg=6.02µs, p(90)=5.01µs, p(95)=5.81µs| avg=6.65µs, p(90)=5.15µs, p(95)=6.02µs|
+| **Request Receiving**       | avg=44.14µs, p(90)=61.38µs, p(95)=75.48µs| avg=42.62µs, p(90)=62.5µs, p(95)=76.01µs|
+| **Request Sending**         | avg=14.77µs, p(90)=16.12µs, p(95)=32.88µs| avg=13.8µs, p(90)=15.95µs, p(95)=29.79µs|
+| **Iteration Duration**      | avg=3.29s, p(90)=5.79s, p(95)=6.52s   | avg=4.32s, p(90)=7.73s, p(95)=9.06s   |
+| **Virtual Users (VUs)**     | max=10,000                            | max=10,000                            |
+
+To visualize these differences, here’s a comparative analysis:
+
+![dotnet8_loadtests_result.png](dotnet8_loadtests_result.png)
+![dotnet9_loadtests_result.png](dotnet9_loadtests_result.png)
+
+This summary highlights key performance metrics, demonstrating how both .NET versions handle load testing. From the given data, we can see that .NET 8 had a higher throughput (Requests per second) and better average request duration compared to .NET 9.
