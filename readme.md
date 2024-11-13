@@ -1,4 +1,7 @@
-﻿
+
+Link to the EFcore repository issue
+https://github.com/dotnet/efcore/issues/35053
+ 
 ## Benchmark results
 ### Get customer by id. Include orders. Include orderItems
 
