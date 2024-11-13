@@ -158,7 +158,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: "0.5"
           memory: "256m"
   
   benchmarkAotPostgres:
