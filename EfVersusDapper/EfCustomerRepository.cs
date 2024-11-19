@@ -138,6 +138,16 @@ public class EfCustomerRepository(ApplicationDbContext context, IConfiguration c
     {
         return await context.Customers.CountAsync();
     }
+    
+    public async Task<CustomerDto?> GetCustomerByIdRawAsync(Guid customerId)
+    {
+        var customer = context.Database.SqlQuery<CustomerDto>($"""
+                                                                        SELECT "Id", "Name"
+                                                                        FROM "Customers"
+                                                                        WHERE "Id" = {customerId}
+                                                                        """);
+        return  await customer.FirstOrDefaultAsync();
+    }
 
     public async Task<CustomerDto?> GetCustomerByIdAsync(Guid customerId)
     {

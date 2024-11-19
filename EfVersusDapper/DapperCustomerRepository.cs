@@ -234,4 +234,9 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
 
         return customer;
     }
+
+    public Task<CustomerDto?> GetCustomerByIdRawAsync(Guid customerId)
+    {
+        return GetCustomerByIdAsync(customerId);
+    }
 }

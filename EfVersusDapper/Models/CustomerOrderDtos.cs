@@ -1,10 +1,13 @@
 // Dtos/CustomerDto.cs
 
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class CustomerDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
+    
+    [NotMapped]
     public List<OrderDto> Orders { get; set; }
 }
 

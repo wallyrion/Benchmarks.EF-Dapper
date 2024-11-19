@@ -10,4 +10,6 @@ public interface ICustomerRepository
     Task<int> GetCustomersCountAsync();
 
     Task<CustomerDto?> GetCustomerByIdAsync(Guid customerId);
+
+    Task<CustomerDto?> GetCustomerByIdRawAsync(Guid customerId);
 }

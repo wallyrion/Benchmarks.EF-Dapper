@@ -3,11 +3,13 @@
 using BenchmarkDotNet.Running;
 using Benchmarks;
 
-/*var s = new BenchmarkService();
-s.Setup();
+/*
+var s = new BenchmarkService();
+await s.Setup();
 s.IterationSetup();
-s.GetCustomerById();
-var r = await s.GetCustomerById();*/
+//s.GetCustomerById();
+var r = await s.GetCustomerByIdRaw();
+*/
 
 /*
 BenchmarkRunner.Run<BenchmarkGetCustomerById>();
@@ -15,5 +17,5 @@ BenchmarkRunner.Run<BenchmarkGetCustomersAllIds>();
 BenchmarkRunner.Run<BenchmarkGetCustomersCount>();
 */
 
-
-BenchmarkRunner.Run<BenchmarkService>();
+//BenchmarkRunner.Run<BenchmarkGetCustomerByidRawSql>();
+BenchmarkRunner.Run<BenchmarkGetCustomerByidRawSql>();
