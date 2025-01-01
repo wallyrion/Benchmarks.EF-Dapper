@@ -114,7 +114,7 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
         return result.FirstOrDefault();
     }
 
-    public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
+    public async Task<List<CustomerDto>> GetAllCustomersAsync()
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -157,7 +157,7 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
             splitOn: "Id, Id"
         );
 
-        return result.Distinct().ToList();
+        return result.ToList();
     }
 
     public async Task AddCustomerAsync(CustomerDto customerDto)

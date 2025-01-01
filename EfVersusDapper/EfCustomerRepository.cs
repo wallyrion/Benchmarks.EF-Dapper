@@ -74,34 +74,32 @@ public class EfCustomerRepository(ApplicationDbContext context, IConfiguration c
         return result;
     }
 
-    public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
+    public async Task<List<CustomerDto>> GetAllCustomersAsync()
     {
         var customers = await context.Customers
             .OrderBy(c => c.Name)
-            .Include(c => c.Orders.OrderBy(o => o.OrderDate))
-            .ThenInclude(o => o.OrderItems)
+            .Select(customer => new CustomerDto
+            {
+                Id = customer.Id,
+                Name = customer.Name,
+                Orders = customer.Orders.Select(order => new OrderDto
+                {
+                    OrderId = order.Id,
+                    OrderDate = order.OrderDate,
+                    OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                    {
+                        OrderItemId = oi.Id,
+                        ProductName = oi.ProductName,
+                        Quantity = oi.Quantity,
+                        Price = oi.Price
+                    }).ToList()
+                }).ToList()
+            })
             .ToListAsync();
 
         // Transform models to DTOs
-        var customerDtos = customers.Select(customer => new CustomerDto
-        {
-            Id = customer.Id,
-            Name = customer.Name,
-            Orders = customer.Orders.Select(order => new OrderDto
-            {
-                OrderId = order.Id,
-                OrderDate = order.OrderDate,
-                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
-                {
-                    OrderItemId = oi.Id,
-                    ProductName = oi.ProductName,
-                    Quantity = oi.Quantity,
-                    Price = oi.Price
-                }).ToList()
-            }).ToList()
-        });
 
-        return customerDtos;
+        return customers;
     }
 
     public async Task AddCustomerAsync(CustomerDto customerDto)
