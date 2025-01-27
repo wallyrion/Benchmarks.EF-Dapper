@@ -235,6 +235,16 @@ public class DapperCustomerRepository(IConfiguration configuration) : ICustomerR
         return customer;
     }
 
+    public Task<Customer?> GetCustomerEntityByIdAsync(Guid customerId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Customer?> GetCustomerEntityByIdNoTrackingAsync(Guid customerId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<CustomerDto?> GetCustomerByIdRawAsync(Guid customerId)
     {
         return GetCustomerByIdAsync(customerId);

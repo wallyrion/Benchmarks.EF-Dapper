@@ -136,7 +136,17 @@ public class EfCustomerRepository(ApplicationDbContext context, IConfiguration c
     {
         return await context.Customers.CountAsync();
     }
-    
+
+    public async Task<Customer?> GetCustomerEntityByIdAsync(Guid customerId)
+    {
+        return await context.Customers.Include(c => c.Orders).FirstOrDefaultAsync(x => x.Id == customerId);
+    }
+
+    public async Task<Customer?> GetCustomerEntityByIdNoTrackingAsync(Guid customerId)
+    {
+        return await context.Customers.AsNoTracking().Include(x => x.Orders).FirstOrDefaultAsync(x => x.Id == customerId);
+    }
+
     public async Task<CustomerDto?> GetCustomerByIdRawAsync(Guid customerId)
     {
         var customer = context.Database.SqlQuery<CustomerDto>($"""

@@ -14,7 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         modelBuilder.Entity<Customer>()
             .HasMany(c => c.Orders)
-            .WithOne(o => o.Customer)
+            .WithOne()
             .HasForeignKey(o => o.CustomerId);
         
         modelBuilder.Entity<Order>()

@@ -28,6 +28,12 @@ public class DbInitializer
         .UseSeed(Seed)
         .RuleFor(c => c.Id, f => Guid.NewGuid())
         .RuleFor(c => c.Orders, () => OrderFaker.Generate(10))
+        .RuleFor(c => c.FirstName, f => f.Person.FirstName)
+        .RuleFor(c => c.LastName, f => f.Person.LastName)
+        .RuleFor(c => c.Email, f => f.Person.Email)
+        .RuleFor(c => c.Phone, f => f.Person.Phone)
+        .RuleFor(c => c.Website, f => f.Person.Website)
+        .RuleFor(c => c.DateOfBirth, f => (f.Person.DateOfBirth).ToUniversalTime())
         .RuleFor(c => c.Name, f => f.Name.FullName());
 
 

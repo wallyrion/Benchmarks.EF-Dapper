@@ -5,6 +5,7 @@ export const options = {
     stages: [
         {duration: '10s', target: 5},
         {duration: '5m', target: 2000},
+        {duration: '5m', target: 5000},
         {duration: '1m', target: 0}
     ],
     thresholds: {
@@ -29,7 +30,7 @@ export default function (customerIds) {
     const randomIndex = randomIntBetween(0, customerIds.length - 1);
     
     const customerId = customerIds[randomIndex];
-    const query = `${__ENV.BASE_URL}/customers/${customerId}`;
+    const query = `${__ENV.BASE_URL}/customers-entity/${customerId}`;
     const response = http.get(query);
 
     sleep(1)

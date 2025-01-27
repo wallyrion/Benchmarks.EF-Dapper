@@ -113,7 +113,7 @@ services:
     container_name: benchmark_webapp_no_aot
     build:
       context: ./EfVersusDapper  # Path to your Dockerfile
-      dockerfile: Dockerfile
+      dockerfile: Dotnet9.Dockerfile
     environment:
       OTEL_SERVICE_NAME: "NoAotApp"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://dashboard:18889"
@@ -121,6 +121,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=benchmarkNoAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
       UseEf: true
       UseSplitQuery: true
+      AsNoTracking: false
     image: noaotapp
     ports:
       - "634:8080"
@@ -132,8 +133,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "256m"
+          cpus: "2"
+          memory: "512m"
 
   webapp_aot:
     container_name: benchmark_webapp_aot
@@ -144,6 +145,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=benchmarkAotPostgres;Port=5432;Database=benchmarkDb2;Username=postgres;Password=postgres"
       UseEf: true
       UseSplitQuery: true
+      AsNoTracking: true
     build:
       context: ./EfVersusDapper  # Path to your Dockerfile
       dockerfile: Dotnet9.Dockerfile
@@ -158,8 +160,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "256m"
+          cpus: "2"
+          memory: "512m"
   
   benchmarkAotPostgres:
     image: postgres
@@ -170,7 +172,7 @@ services:
     ports:
       - "5457:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_aot:/var/lib/postgresql/data
     networks:
       - custom-network
     healthcheck:
@@ -189,7 +191,7 @@ services:
     ports:
       - "5458:5432"
     volumes:
-      - postgres_data2:/var/lib/postgresql/data
+      - postgres_data_noaot:/var/lib/postgresql/data
     networks:
       - custom-network 
     healthcheck:
@@ -222,6 +224,6 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
-  postgres_data:
-  postgres_data2:
+  postgres_data_aot:
+  postgres_data_noaot:
   

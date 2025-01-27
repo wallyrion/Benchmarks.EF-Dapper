@@ -24,6 +24,11 @@ builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+/*builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});*/
+
 builder.Services.AddKeyedScoped<ICustomerRepository, EfCustomerRepository>("EF");
 builder.Services.AddKeyedScoped<ICustomerRepository, DapperCustomerRepository>("Dapper");
 
@@ -67,6 +72,20 @@ app.MapGet("/customers/{id:guid}", async (ICustomerRepository repository, Guid i
     var customer = await repository.GetCustomerWithOrdersAsync(id);
     return customer is not null ? Results.Ok(customer) : Results.NotFound();
 });
+
+app.MapGet("/customers-entity/{id:guid}", async (ICustomerRepository repository, Guid id, IConfiguration configuration) =>
+{
+    var asNoTracking = configuration.GetValue<bool>("AsNoTracking");
+
+    if (asNoTracking)
+    {
+        return await repository.GetCustomerEntityByIdNoTrackingAsync(id);
+    }
+
+    return await repository.GetCustomerEntityByIdAsync(id);
+});
+
+
 
 app.MapGet("/customers/all", async (ICustomerRepository repository) => 
     await repository.GetAllCustomerIdsAsync());
