@@ -9,8 +9,6 @@ namespace EfVersusDapper;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    static ApplicationDbContext()
-        => NpgsqlConnection.GlobalTypeMapper.MapEnum<Gender>();
     
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Order> Orders { get; set; }
