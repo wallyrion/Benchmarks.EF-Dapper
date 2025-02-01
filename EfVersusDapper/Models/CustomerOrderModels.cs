@@ -15,7 +15,7 @@ public class Customer
     public string Phone { get; set; }
     public string Website { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public Gender Gender { get; set; }
+    public MyGender MyGender { get; set; }
 }
 
 // Models/Order.cs

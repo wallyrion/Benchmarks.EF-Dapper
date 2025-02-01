@@ -28,7 +28,7 @@ public class DbInitializer
     public static readonly Faker<Customer> CustomerFaker = new Faker<Customer>()
         .UseSeed(Seed)
         .RuleFor(c => c.Id, f => Guid.NewGuid())
-        .RuleFor(c => c.Gender, f => f.PickRandom<Gender>())
+        .RuleFor(c => c.MyGender, f => f.PickRandom<MyGender>())
         .RuleFor(c => c.Orders, () => OrderFaker.Generate(10))
         .RuleFor(c => c.FirstName, f => f.Person.FirstName)
         .RuleFor(c => c.LastName, f => f.Person.LastName)

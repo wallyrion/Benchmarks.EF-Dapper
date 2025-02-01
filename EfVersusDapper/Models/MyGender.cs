@@ -1,6 +1,6 @@
 namespace EfVersusDapper.Models;
 
-public enum Gender
+public enum MyGender
 {
     Male,
     Female

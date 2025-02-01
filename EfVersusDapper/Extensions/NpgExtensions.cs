@@ -8,7 +8,7 @@ public static class NpgExtensions
     internal static NpgsqlDataSource CreateDefaultNpgDataSource(string connectionString)
     {
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.MapEnum<Gender>("Gender");
+        dataSourceBuilder.MapEnum<MyGender>("MyGender");
 
         var dataSource = dataSourceBuilder.Build();
 
