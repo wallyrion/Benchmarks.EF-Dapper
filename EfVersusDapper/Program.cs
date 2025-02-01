@@ -1,4 +1,5 @@
 using EfVersusDapper;
+using EfVersusDapper.Extensions;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 
@@ -21,8 +22,12 @@ builder.Services.AddOpenTelemetry()
     });
 // Add to Program.cs
 builder.Services.AddHealthChecks();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dataSource = NpgExtensions.CreateDefaultNpgDataSource(connectionString!);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(dataSource));
 
 /*builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -85,6 +90,28 @@ app.MapGet("/customers-entity/{id:guid}", async (ICustomerRepository repository,
     return await repository.GetCustomerEntityByIdAsync(id);
 });
 
+app.MapPost("/seed", async (ApplicationDbContext dbContext) =>
+{
+    var customerIds = await dbContext.Customers.Where(c => c.Name == "Torrance Nienow")
+        .FirstOrDefaultAsync();
+
+    var r = Enumerable.Range(0, 10000);
+     
+    
+    
+    foreach (var index in  r)
+    {
+        var f = DbInitializer.OrderFaker.RuleFor(o => o.CustomerId, customerIds!.Id);
+        
+        var orders = f.Generate(10000);
+        
+        await dbContext.Orders.AddRangeAsync(orders);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+    }
+    
+    return Results.Ok();
+});
 
 
 app.MapGet("/customers/all", async (ICustomerRepository repository) => 
@@ -103,3 +130,4 @@ app.MapPost("/customers", async (ICustomerRepository repository, CustomerDto cus
     return Results.Created($"/customers/{customerDto.Id}", customerDto);
 });
 app.Run();
+

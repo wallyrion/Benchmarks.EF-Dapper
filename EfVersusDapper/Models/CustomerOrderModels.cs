@@ -1,5 +1,7 @@
 // Models/Customer.cs
 
+using EfVersusDapper.Models;
+
 namespace EfVersusDapper;
 
 public class Customer
@@ -13,6 +15,7 @@ public class Customer
     public string Phone { get; set; }
     public string Website { get; set; }
     public DateTime DateOfBirth { get; set; }
+    public Gender Gender { get; set; }
 }
 
 // Models/Order.cs
