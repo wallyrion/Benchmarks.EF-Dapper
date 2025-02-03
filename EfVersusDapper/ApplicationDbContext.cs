@@ -15,18 +15,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresEnum<MyGender>();
-
         modelBuilder.Entity<Customer>()
             .HasMany(c => c.Orders)
             .WithOne()
             .HasForeignKey(o => o.CustomerId);
-
-        modelBuilder.Entity<Customer>()
-            .Property(x => x.MyGender)
-            .HasColumnType("MyGender");
-        
-        
 
         modelBuilder.Entity<Order>()
             .HasMany(o => o.OrderItems)

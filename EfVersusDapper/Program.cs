@@ -1,6 +1,8 @@
 using EfVersusDapper;
 using EfVersusDapper.Extensions;
+using EfVersusDapper.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.NameTranslation;
 using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,10 +26,10 @@ builder.Services.AddOpenTelemetry()
 builder.Services.AddHealthChecks();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var dataSource = NpgExtensions.CreateDefaultNpgDataSource(connectionString!);
+//var dataSource = NpgExtensions.CreateDefaultNpgDataSource(connectionString!);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(dataSource));
+    options.UseNpgsql(connectionString, o => o.MapEnum<Gender>(nameTranslator: new NpgsqlNullNameTranslator())));
 
 /*builder.Services.ConfigureHttpJsonOptions(options =>
 {
